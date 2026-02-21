@@ -1,0 +1,26 @@
+{
+  "name": "sl-engagement",
+  "description": "Social Listening & Engagement — Find relevant social media discussions across Reddit, LinkedIn, Twitter/X, and Quora, draft on-brand comments, and post only after explicit user approval. Safe read-only discovery with human-in-the-loop posting.",
+  "version": "1.0.0",
+  "author": {
+    "name": "mangollc"
+  },
+  "repository": "https://github.com/mangollc/sl-engagement",
+  "license": "MIT",
+  "keywords": [
+    "social-listening",
+    "engagement",
+    "reddit",
+    "linkedin",
+    "twitter",
+    "quora",
+    "brand-monitoring",
+    "community-engagement",
+    "social-media",
+    "content-marketing"
+  ],
+  "skills": [
+    "./skills/social-listening"
+  ],
+  "commands": "./commands/"
+}

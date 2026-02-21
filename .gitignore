@@ -1,0 +1,15 @@
+# Engagement working data
+.engagement/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/
+
+# Firebase
+firebase-debug.log
+
+# Node
+node_modules/
