@@ -1,4 +1,7 @@
-# Engagement working data
+# Social listening client data (per-client configs, history, sessions)
+.sl/
+
+# Legacy engagement working data
 .engagement/
 
 # OS files

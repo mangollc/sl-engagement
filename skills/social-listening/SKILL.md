@@ -4,7 +4,7 @@ description: |
   Social listening and human-approved engagement across Reddit, LinkedIn, Twitter/X,
   and Quora. Safe read-only discovery using web search only (never touches logged-in
   sessions during search). Drafts on-brand comments and posts only after explicit
-  user approval. Batched results with direct URLs, 30-day date filtering, 100-result cap.
+  user approval. Multi-client support for agency workflows.
 
   USE FOR:
   - "social listening", "find posts to comment on", "engage on Reddit"
@@ -14,11 +14,20 @@ description: |
   - "monitor social media", "brand engagement", "community participation"
   - "find conversations about [topic]", "search Reddit for [keyword]"
   - "draft comments for social media", "social media outreach"
+  - "set up a client", "configure brand", "switch client"
 
-  Stores engagement history in engagement-history.md for cross-session tracking.
+  Multi-client: stores configs in .sl/clients/{slug}/config.json
+  Engagement history: .sl/clients/{slug}/history/engagements.json
 ---
 
 # Social Listening & Engagement
+
+## Client Context Loading
+
+Always load client context first. See [rules/client-setup.md](rules/client-setup.md)
+for the full client loading pattern, config schema, and slug generation rules.
+
+If no `.sl/` directory exists, ask user to run `/setup` first.
 
 ## Engagement Modes
 
@@ -29,23 +38,36 @@ Determine which mode the user wants. Ask if ambiguous.
 - **Monitor only:** Search and report findings without drafting comments
 - **Reply management:** User provides their own post → find and draft replies to comments on it
 
+---
+
 ## Brand Context (Required Before Any Search)
 
-Collect from the user (ask if not already provided in conversation):
+1. Load client context following [rules/client-setup.md](rules/client-setup.md):
+   - If client slug provided as argument, load `.sl/clients/{slug}/config.json`
+   - If no slug, use `default_client` from `.sl/config.json`
+   - If no default, list available clients and ask user to choose
+   - If no `.sl/` directory exists, ask user to run `/setup` first
 
-1. **Brand name** — the name to represent in comments
-2. **Brand description** — what the business does, unique value, target audience
-3. **Website URL** — destination to naturally reference
-4. **Keywords / topics** — phrases or themes to search for
-5. **Platforms** — Reddit, LinkedIn, Twitter/X, Quora (or all)
-6. **Tone** — default: friendly, thoughtful, constructive. Note any adjustments
-7. **Disclosure preference** — whether to include "I work with [brand]" or similar
+2. Extract from the client config:
+   - `brand_name` — the name to use in comments
+   - `brand_description` — what the business does
+   - `website_url` — destination to reference in comments
+   - `keywords` — search phrases
+   - `platforms` — which platforms to search
+   - `tone` — comment tone
+   - `disclosure` — whether to disclose brand affiliation
+   - `competitors` — for filtering out competitor-bashing threads
+   - `subreddits` — for targeted Reddit searches
 
-Extract from earlier conversation if already provided — do not re-ask.
+3. If any critical field is missing from config (`brand_name`, `keywords`,
+   `platforms`), ask the user to provide it and offer to update the config.
 
-**Load engagement history:** Check for `engagement-history.md` in the project
-directory. If it exists, read it to avoid re-engaging with threads already in
-the history.
+4. If the user provides additional context in conversation (extra keywords,
+   adjusted tone), use it for this session but do not modify the config unless asked.
+
+**Load engagement history:** Check `.sl/clients/{slug}/history/engagements.json`.
+If it exists, load all entries. Use the `url` field to build a set for
+de-duplicating search results.
 
 ---
 
@@ -75,29 +97,50 @@ This protects the user's logged-in accounts from being touched during discovery.
 Calculate the date 30 days ago from today. Include `after:YYYY-MM-DD` in
 **every** search query.
 
-Query pattern:
-```
-site:[platform] "[keyword]" after:[30-days-ago date]
-```
-
 Exclude any result without a clear date or older than 30 days.
 
 ### Search Queries by Platform
 
+For each keyword in the client config, run **multiple query variations** to
+maximize coverage. Use both quoted (exact match) and unquoted (broad match) forms.
+
 **Reddit:**
-- `site:reddit.com "keyword phrase" after:YYYY-MM-DD`
-- Subreddit-specific: `site:reddit.com/r/[subreddit] "keyword" after:YYYY-MM-DD`
+- `site:reddit.com "{keyword}" after:YYYY-MM-DD`
+- `site:reddit.com {keyword} after:YYYY-MM-DD`
+- For each subreddit in client config: `site:reddit.com/r/{subreddit} "{keyword}" after:YYYY-MM-DD`
+- Advice variant: `site:reddit.com "{keyword} recommendation" OR "{keyword} advice" after:YYYY-MM-DD`
 
 **LinkedIn:**
-- `site:linkedin.com/posts "keyword" after:YYYY-MM-DD`
-- Also: `site:linkedin.com/pulse "keyword" after:YYYY-MM-DD`
+- `site:linkedin.com/posts "{keyword}" after:YYYY-MM-DD`
+- `site:linkedin.com/pulse "{keyword}" after:YYYY-MM-DD`
+- `site:linkedin.com/posts {keyword} after:YYYY-MM-DD`
 
 **Twitter/X:**
-- `site:twitter.com "keyword" after:YYYY-MM-DD`
-- Also: `site:x.com "keyword" after:YYYY-MM-DD`
+- `site:twitter.com "{keyword}" after:YYYY-MM-DD`
+- `site:x.com "{keyword}" after:YYYY-MM-DD`
+- `site:twitter.com {keyword} after:YYYY-MM-DD`
 
 **Quora:**
-- `site:quora.com "keyword" after:YYYY-MM-DD`
+- `site:quora.com "{keyword}" after:YYYY-MM-DD`
+- `site:quora.com {keyword} after:YYYY-MM-DD`
+
+### Competitor Filtering
+
+If the client config includes `competitors`, filter at the **candidate
+evaluation stage** (not in search queries — adding `-"competitor"` would also
+exclude relevant discussions):
+- Review titles/snippets for patterns like "why [competitor] sucks",
+  "[competitor] is terrible". Include these only if the brand can add
+  constructive value, not pile on.
+- Threads comparing the brand vs a competitor may be high-value — evaluate
+  on a case-by-case basis.
+
+### De-duplication Against History
+
+Before presenting results, check each URL against the engagement history
+loaded from `.sl/clients/{slug}/history/engagements.json`. Silently exclude
+any URL already in history. If all results are duplicates, inform the user
+and suggest trying different keywords or a broader date range.
 
 ### Result Cap: Maximum 100
 
@@ -121,7 +164,8 @@ A post must meet at least 3 of:
 - Brand's product/service genuinely solves a stated problem
 
 **Disqualify** posts that are: purely venting, closed/archived/locked, already
-well-answered, competitor-bashing, already engaged (per history), or undated.
+well-answered, competitor-bashing (unless constructive), already engaged (per
+history), or undated.
 
 ### Present Results: Batches of 10
 
@@ -132,6 +176,7 @@ Format per batch:
 
 ```
 Search Results — Batch [N] of [TOTAL BATCHES]
+Client: [brand_name]
 Date range: [OLDEST in batch] to [NEWEST in batch]
 Total results: [COUNT] | Showing: [START]-[END]
 
@@ -190,10 +235,13 @@ Recommend monitoring only — respond?"
 
 ## Stage 3 — Draft the Comment
 
+Use the client config's `tone` and `disclosure` settings.
+
 ### Structure Rules
 - First 80% must stand alone as valuable without any brand mention
 - Brand mention in final 20% only, maximum once per comment
-- Include disclosure if requested (e.g., "Full disclosure: I'm part of the [brand] team")
+- If `disclosure` is true in client config, include naturally
+  (e.g., "Full disclosure: I'm part of the [brand] team")
 
 ### Writing Principles
 - **Lead with value:** Answer the question, share insight, validate experience
@@ -217,7 +265,7 @@ Recommend monitoring only — respond?"
 - Use marketing language: "solutions", "leverage", "game-changer", "seamless"
 - Include UTM parameters unless user specifically requests them
 - Comment where top reply already covers what you'd say
-- Start with "As someone who works at [brand]..." unless disclosure was requested
+- Start with "As someone who works at [brand]..." unless disclosure is enabled
 - Use excessive emojis (two max, casual platforms only)
 
 ---
@@ -232,6 +280,7 @@ Present each draft:
 
 ```
 ---
+Client: [brand_name]
 Platform: [Reddit / LinkedIn / Twitter / Quora]
 Post: [title] — [FULL DIRECT URL]
 Posted by: [username] | [date]
@@ -269,7 +318,9 @@ Only after explicit user approval:
    at [URL]. Submitting."
 6. **Submit.**
 7. **Verify** the comment appeared. If failed, inform user.
-8. **Log** the URL, platform, date, and first line for session summary.
+8. **Save to engagement history.** Immediately append to
+   `.sl/clients/{slug}/history/engagements.json` with: url, platform,
+   post_title, comment_posted, date, status. Do NOT ask — always save.
 
 ### Rate Limits
 - Minimum 2 minutes between posts on same platform
@@ -294,7 +345,7 @@ engagement.
 content, check Space rules.
 
 **FTC:** If material connection exists (employee, contractor, paid), disclosure
-may be required. Ask user. When in doubt, include disclosure.
+may be required. Check client config `disclosure` field. When in doubt, include.
 
 ---
 
@@ -302,21 +353,26 @@ may be required. Ask user. When in doubt, include disclosure.
 
 | Scenario | Action |
 |----------|--------|
+| No `.sl/` directory | Ask user to run `/setup` first |
+| Client slug not found | List available clients, ask user to choose |
 | No candidates found | Suggest broader keywords, different platforms, adjusted topics |
+| All results are duplicates | Inform user, suggest different keywords or date range |
 | Login required | Tell user which platform. Wait. Never enter credentials. |
 | UI changed / no reply field | Use accessibility tree. Screenshot if stuck. Ask user. |
 | Post failed | Inform user. Suggest waiting or manual posting. |
 | All drafts rejected | Offer: new search, tone adjustment, platform switch, or end session |
 | No date on result | Mark as "Date not available — may be outside 30-day window". User decides. |
+| History file corrupted | Back up to `.bak`, start fresh, warn user |
 
 ---
 
 ## Session Summary
 
-At session end:
+At session end, display:
 
 ```
-Session Summary
+Session Summary — [brand_name]
+Date: [TODAY]
 Search date range: [30-DAYS-AGO] to [TODAY]
 Total results found: [N]
 Results reviewed by user: [N]
@@ -336,4 +392,8 @@ Next session suggestions:
 - [observations about keyword/platform effectiveness]
 ```
 
-Offer to append this summary to `engagement-history.md` in the project directory.
+**Auto-save:** Always save automatically — do not ask the user.
+- Append posted engagements to `.sl/clients/{slug}/history/engagements.json`
+- Write full session summary to `.sl/clients/{slug}/sessions/session-{YYYY-MM-DD}-{N}.json`
+
+See [rules/client-setup.md](rules/client-setup.md) for the exact JSON schemas.
