@@ -9,11 +9,11 @@ Manage client brand profiles stored in `.sl/clients/`. See [rules/client-setup.m
 
 ## Sub-commands
 
-### `/clients` or `/clients list`
+### `/sl-clients` or `/sl-clients list`
 
 List all configured client profiles.
 
-1. Check `.sl/clients/` directory exists. If not: "No clients configured. Run `/setup` to create your first brand profile."
+1. Check `.sl/clients/` directory exists. If not: "No clients configured. Run `/sl-setup` to create your first brand profile."
 2. Read `.sl/config.json` to get `default_client`
 3. List each client directory under `.sl/clients/`:
 
@@ -28,10 +28,10 @@ Client Profiles
   joes-plumbing     Joe's Plumbing Co.  plumber, emergency repair   reddit
 
 3 clients configured | Default: acme-corp
-Run /clients view <slug> for full details
+Run /sl-clients view <slug> for full details
 ```
 
-### `/clients view <slug>`
+### `/sl-clients view <slug>`
 
 Show full config for a specific client.
 
@@ -62,7 +62,7 @@ Sessions: {N} sessions recorded
 Notes: {notes or "none"}
 ```
 
-### `/clients default <slug>`
+### `/sl-clients default <slug>`
 
 Switch the default client.
 
@@ -72,7 +72,7 @@ Switch the default client.
 4. Write `.sl/config.json`
 5. Confirm: "Default client switched to {brand_name} ({slug})"
 
-### `/clients delete <slug>`
+### `/sl-clients delete <slug>`
 
 Remove a client profile.
 

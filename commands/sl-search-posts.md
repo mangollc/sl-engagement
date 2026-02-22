@@ -15,7 +15,7 @@ Fast search-only mode from the social-listening skill. No context analysis, no d
    - Full direct URL
    - Platform, date, engagement metrics (comments, upvotes/likes)
    - Flag previously-engaged posts if history is loaded
-5. User can: "load more" for next batch, or select posts to switch to full `/engage` workflow
+5. User can: "load more" for next batch, or select posts to switch to full `/sl-engage` workflow
 6. Show total count and date range covered at the top of each batch
 
 This command works without a client config (for quick ad-hoc searches) but benefits from one if present (subreddit targeting, de-duplication, competitor awareness).

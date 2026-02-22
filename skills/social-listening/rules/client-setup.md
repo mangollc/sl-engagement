@@ -94,13 +94,13 @@ Every skill and command MUST follow this 4-step sequence:
 
 ### Step 1: Check `.sl/` exists
 If `.sl/` directory does not exist, tell the user:
-"No client profiles found. Run `/setup` to configure your first brand."
+"No client profiles found. Run `/sl-setup` to configure your first brand."
 Stop here.
 
 ### Step 2: Client slug provided as argument
 If the user passed a client slug (e.g., `/engage acme-corp`), load
 `.sl/clients/{slug}/config.json`. If the slug directory does not exist,
-list available clients and ask the user to choose or run `/setup`.
+list available clients and ask the user to choose or run `/sl-setup`.
 
 ### Step 3: Use default client
 If no slug was provided, read `.sl/config.json` and use the `default_client`

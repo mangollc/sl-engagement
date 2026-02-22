@@ -7,7 +7,7 @@ argument-hint: [client-slug] [keywords or topic]
 
 Run the social-listening skill in **monitor only** mode — search and report, no drafting or posting.
 
-1. Load client context from `.sl/`. See [rules/client-setup.md](../skills/social-listening/rules/client-setup.md). If a client slug is provided as the first argument, use it. Otherwise use the default client. If no `.sl/` directory exists, ask user to run `/setup` first
+1. Load client context from `.sl/`. See [rules/client-setup.md](../skills/social-listening/rules/client-setup.md). If a client slug is provided as the first argument, use it. Otherwise use the default client. If no `.sl/` directory exists, ask user to run `/sl-setup` first
 2. Load engagement history from `.sl/clients/{slug}/history/engagements.json` — mark previously-engaged posts in results as "[previously engaged]"
 3. If additional keywords are provided as arguments, add them to the client config keywords for this session only
 4. Run Stage 1: Safe search using WebSearch only (never navigate to platforms). Run multiple query variations per keyword. Cross-reference client subreddits. Filter to last 30 days. Cap at 100 results

@@ -7,7 +7,7 @@ argument-hint: [client-slug] [keywords or topic]
 
 Run the full discovery-to-posting workflow from the social-listening skill.
 
-1. Load client context from `.sl/`. See [rules/client-setup.md](../skills/social-listening/rules/client-setup.md). If a client slug is provided as the first argument, use it. Otherwise use the default client. If no `.sl/` directory exists, ask user to run `/setup` first
+1. Load client context from `.sl/`. See [rules/client-setup.md](../skills/social-listening/rules/client-setup.md). If a client slug is provided as the first argument, use it. Otherwise use the default client. If no `.sl/` directory exists, ask user to run `/sl-setup` first
 2. Load engagement history from `.sl/clients/{slug}/history/engagements.json` — used to exclude already-engaged posts from results
 3. If additional keywords are provided as arguments (beyond the slug), add them to the client config keywords for this session only
 4. Run Stage 1: Safe search using WebSearch only (never navigate to platforms). Run multiple query variations per keyword (quoted + unquoted). Cross-reference client subreddits for targeted Reddit searches. Filter to last 30 days. Cap at 100 results. De-duplicate against history. Present in batches of 10 with direct URLs

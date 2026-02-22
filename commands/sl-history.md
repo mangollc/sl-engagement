@@ -13,12 +13,12 @@ Load client context following [rules/client-setup.md](../skills/social-listening
 
 ## Sub-commands
 
-### `/history` or `/history view`
+### `/sl-history` or `/sl-history view`
 
 Display recent engagements for the active client.
 
 1. Load engagement history from `.sl/clients/{slug}/history/engagements.json`
-2. If no history file or empty: "No engagement history for {brand_name}. Run `/engage` to get started."
+2. If no history file or empty: "No engagement history for {brand_name}. Run `/sl-engage` to get started."
 3. Show most recent 20 engagements, newest first:
 
 ```
@@ -35,15 +35,15 @@ Total: {N} engagements | Showing latest 20
 ...
 
 Type "show more" to see older entries.
-Type "/history stats" for summary statistics.
+Type "/sl-history stats" for summary statistics.
 ```
 
 4. Support filtering:
-   - `/history view reddit` — filter by platform
-   - `/history view 2026-02` — filter by month
-   - `/history view last 7` — show last 7 days only
+   - `/sl-history view reddit` — filter by platform
+   - `/sl-history view 2026-02` — filter by month
+   - `/sl-history view last 7` — show last 7 days only
 
-### `/history stats`
+### `/sl-history stats`
 
 Show engagement statistics and trends.
 
@@ -70,7 +70,7 @@ Last 7 days:
 Sessions: {N} total
 ```
 
-### `/history clear`
+### `/sl-history clear`
 
 Clear engagement history for the active client.
 
@@ -82,7 +82,7 @@ Clear engagement history for the active client.
 6. Write fresh file: `{"engagements": []}`
 7. Confirm: "Engagement history cleared for {brand_name}. Backup saved to engagements.json.bak."
 
-### `/history export`
+### `/sl-history export`
 
 Export engagement history as a formatted summary.
 

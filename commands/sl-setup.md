@@ -5,7 +5,7 @@ argument-hint: [brand-name]
 
 # Client Brand Setup
 
-Create a brand profile so all commands (`/engage`, `/monitor`, `/search-posts`, `/reply-to`) automatically load the right brand context without re-asking every session.
+Create a brand profile so all commands (`/sl-engage`, `/sl-monitor`, `/sl-search-posts`, `/sl-reply-to`) automatically load the right brand context without re-asking every session.
 
 See [rules/client-setup.md](../skills/social-listening/rules/client-setup.md) for the full client config schema.
 
@@ -57,10 +57,10 @@ See [rules/client-setup.md](../skills/social-listening/rules/client-setup.md) fo
    Default client: {yes/no}
 
    Ready to use:
-   /engage              — search, draft, and post comments
-   /monitor             — search and report without posting
-   /search-posts        — quick keyword search with direct URLs
-   /reply-to [url]      — draft a comment for a specific post
+   /sl-engage           — search, draft, and post comments
+   /sl-monitor          — search and report without posting
+   /sl-search-posts     — quick keyword search with direct URLs
+   /sl-reply-to [url]   — draft a comment for a specific post
    ```
 
 **This command does NOT run any search.** It only configures the brand profile.

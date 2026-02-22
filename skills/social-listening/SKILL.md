@@ -27,7 +27,7 @@ description: |
 Always load client context first. See [rules/client-setup.md](rules/client-setup.md)
 for the full client loading pattern, config schema, and slug generation rules.
 
-If no `.sl/` directory exists, ask user to run `/setup` first.
+If no `.sl/` directory exists, ask user to run `/sl-setup` first.
 
 ## Global Preferences
 
@@ -67,7 +67,7 @@ Determine which mode the user wants. Ask if ambiguous.
    - If client slug provided as argument, load `.sl/clients/{slug}/config.json`
    - If no slug, use `default_client` from `.sl/config.json`
    - If no default, list available clients and ask user to choose
-   - If no `.sl/` directory exists, ask user to run `/setup` first
+   - If no `.sl/` directory exists, ask user to run `/sl-setup` first
 
 2. Extract from the client config:
    - `brand_name` — the name to use in comments
@@ -401,7 +401,7 @@ may be required. Check client config `disclosure` field. When in doubt, include.
 
 | Scenario | Action |
 |----------|--------|
-| No `.sl/` directory | Ask user to run `/setup` first |
+| No `.sl/` directory | Ask user to run `/sl-setup` first |
 | Client slug not found | List available clients, ask user to choose |
 | No candidates found | Suggest broader keywords, different platforms, adjusted topics |
 | All results are duplicates | Inform user, suggest different keywords or date range |
