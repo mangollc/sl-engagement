@@ -1,7 +1,7 @@
 {
   "name": "sl-engagement",
   "description": "Social Listening & Engagement — Find relevant social media discussions across Reddit, LinkedIn, Twitter/X, and Quora, draft on-brand comments, and post only after explicit user approval. Safe read-only discovery with human-in-the-loop posting.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "mangollc"
   },

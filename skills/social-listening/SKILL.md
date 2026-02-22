@@ -29,6 +29,27 @@ for the full client loading pattern, config schema, and slug generation rules.
 
 If no `.sl/` directory exists, ask user to run `/setup` first.
 
+## Global Preferences
+
+After loading the client config, also read `.sl/config.json` for global preferences:
+
+```json
+{
+  "preferences": {
+    "default_platforms": ["reddit", "linkedin", "twitter", "quora"],
+    "date_range_days": 30,
+    "result_cap": 100,
+    "batch_size": 10
+  }
+}
+```
+
+Use these values throughout the workflow instead of hardcoded numbers. If
+`.sl/config.json` doesn't exist or `preferences` is missing, use the defaults
+shown above (30 days, 100 results, batches of 10).
+
+---
+
 ## Engagement Modes
 
 Determine which mode the user wants. Ask if ambiguous.
@@ -65,6 +86,21 @@ Determine which mode the user wants. Ask if ambiguous.
 4. If the user provides additional context in conversation (extra keywords,
    adjusted tone), use it for this session but do not modify the config unless asked.
 
+### Platform Identifier Normalization
+
+Normalize platform identifiers to canonical forms when loading from config
+or matching from arguments:
+
+| Input variants | Canonical form |
+|----------------|----------------|
+| `twitter`, `x`, `twitter/x`, `twitter-x` | `twitter` |
+| `reddit` | `reddit` |
+| `linkedin` | `linkedin` |
+| `quora` | `quora` |
+
+When searching, use both `site:twitter.com` and `site:x.com` for Twitter/X
+regardless of which form the user specified.
+
 **Load engagement history:** Check `.sl/clients/{slug}/history/engagements.json`.
 If it exists, load all entries. Use the `url` field to build a set for
 de-duplicating search results.
@@ -92,12 +128,13 @@ non-interactive discovery phase.
 
 This protects the user's logged-in accounts from being touched during discovery.
 
-### Date Filter: Last 30 Days Only
+### Date Filter
 
-Calculate the date 30 days ago from today. Include `after:YYYY-MM-DD` in
-**every** search query.
+Calculate the date N days ago from today, where N is `date_range_days` from
+global preferences (default: 30). Include `after:YYYY-MM-DD` in **every**
+search query.
 
-Exclude any result without a clear date or older than 30 days.
+Exclude any result without a clear date or older than the configured range.
 
 ### Search Queries by Platform
 
@@ -135,23 +172,37 @@ exclude relevant discussions):
 - Threads comparing the brand vs a competitor may be high-value — evaluate
   on a case-by-case basis.
 
-### De-duplication Against History
+### De-duplication
 
+Two levels of de-duplication are applied:
+
+**1. Against engagement history:**
 Before presenting results, check each URL against the engagement history
 loaded from `.sl/clients/{slug}/history/engagements.json`. Silently exclude
 any URL already in history. If all results are duplicates, inform the user
 and suggest trying different keywords or a broader date range.
 
-### Result Cap: Maximum 100
+**2. Within the current session:**
+Multiple query variations (quoted, unquoted, subreddit-targeted) often return
+the same post. Maintain a set of URLs seen during the current search session.
+Before adding a result to the presentation list, check if its URL is already
+in the set. Normalize URLs before comparing:
+- Remove trailing slashes
+- Remove query parameters (`?utm_source=...`, `?ref=...`)
+- Normalize `www.reddit.com` and `old.reddit.com` to `reddit.com`
+- Normalize `x.com` to `twitter.com` (or vice versa — pick one canonical form)
+- Remove URL fragments (`#...`)
 
-- Collect up to **100 results maximum** across all platforms
-- If more than 100 found, keep only the most recent 100 (newest first)
+### Result Cap
+
+- Collect up to the configured `result_cap` (default: 100) results across all platforms
+- If more results are found, keep only the most recent ones (newest first)
 - When the cap is hit, notify the user:
 
 ```
-Result cap reached: Your keywords returned more than 100 posts. I've pulled
-the latest 100 results, covering [OLDEST DATE] to [TODAY]. To see older
-posts or narrow results, try more specific keywords or fewer platforms.
+Result cap reached: Your keywords returned more than [RESULT_CAP] posts.
+I've pulled the latest [RESULT_CAP] results, covering [OLDEST DATE] to
+[TODAY]. To narrow results, try more specific keywords or fewer platforms.
 ```
 
 ### Candidate Criteria
@@ -159,7 +210,7 @@ posts or narrow results, try more specific keywords or fewer platforms.
 A post must meet at least 3 of:
 - Brand's expertise is directly relevant
 - Contains an unanswered question or discussion gap
-- Posted within the last 30 days (prefer 7 days)
+- Posted within the configured date range (prefer last 7 days)
 - Has at least 3 upvotes/likes or 2+ comments
 - Brand's product/service genuinely solves a stated problem
 
@@ -167,10 +218,10 @@ A post must meet at least 3 of:
 well-answered, competitor-bashing (unless constructive), already engaged (per
 history), or undated.
 
-### Present Results: Batches of 10
+### Present Results in Batches
 
-Present results in **batches of 10**, sorted newest first. Every result MUST
-include a full direct clickable URL.
+Present results in batches of `batch_size` (default: 10), sorted newest first.
+Every result MUST include a full direct clickable URL.
 
 Format per batch:
 
@@ -189,22 +240,19 @@ Total results: [COUNT] | Showing: [START]-[END]
    [Platform] | [Date] | [Comments] | [Upvotes]
 
 ...
-
-10. ...
-
 ---
 Click any URL to review the post yourself.
 Tell me which posts to draft comments for (e.g., "draft for 1, 3, 7")
-Type "load more" to see the next 10 results.
+Type "load more" to see the next batch.
 Type "skip to drafting" if you've seen enough.
 ```
 
 **Rules:**
-- Exactly 10 per batch (fewer only in the final batch)
-- Number sequentially across batches (batch 2 starts at 11)
+- Exactly `batch_size` per batch (fewer only in the final batch)
+- Number sequentially across batches (batch 2 starts at batch_size + 1)
 - Wait for user response before showing next batch
 - Track which posts the user selects across all batches
-- Show next 10 immediately on "load more"
+- Show next batch immediately on "load more"
 
 **Fewer than 3 results:** Suggest broadening keywords, trying different
 platforms, or adjusting topics. Ask how to proceed.
@@ -373,14 +421,14 @@ At session end, display:
 ```
 Session Summary — [brand_name]
 Date: [TODAY]
-Search date range: [30-DAYS-AGO] to [TODAY]
+Search date range: [DATE-RANGE-START] to [TODAY]
 Total results found: [N]
 Results reviewed by user: [N]
 Comments drafted: [N]
 Comments posted: [N]
 Comments skipped: [N]
 Platforms covered: [list]
-Result cap hit: [Yes — only latest 100 shown / No]
+Result cap hit: [Yes — only latest {result_cap} shown / No]
 
 Posted:
 1. [Platform] — [title] — [URL] — [posted/failed]

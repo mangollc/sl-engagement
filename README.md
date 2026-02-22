@@ -11,9 +11,10 @@ Find relevant social media conversations, draft on-brand comments, and post only
 - **Drafts comments** that lead with helpful insight, not sales pitches
 - **Never posts without your approval** — every comment requires explicit confirmation
 - **Safe search** — discovery uses web search only, never touches your logged-in accounts
-- **30-day window** — only surfaces recent, active conversations
-- **Batched results** — shows 10 at a time with direct URLs so you can review each post
+- **Configurable date window** — surfaces recent, active conversations (default: 30 days)
+- **Batched results** — configurable batch size with direct URLs so you can review each post
 - **Structured history** — JSON-based tracking prevents duplicate engagements across sessions
+- **Smart de-duplication** — excludes already-engaged posts and removes duplicate URLs within searches
 
 ---
 
@@ -47,6 +48,8 @@ Claude will ask for: brand description, website URL, keywords, platforms, tone, 
 /monitor                         # search and report only
 /search-posts "invoicing"        # quick ad-hoc search
 /reply-to https://reddit.com/... # draft for a specific post
+/clients                         # list all client profiles
+/history                         # view engagement history
 ```
 
 ---
@@ -60,6 +63,8 @@ Claude will ask for: brand description, website URL, keywords, platforms, tone, 
 | `/monitor [client-slug] [keywords]` | Search and report only — no drafting or posting |
 | `/search-posts [client-slug] [keywords]` | Quick search with batched results and direct URLs |
 | `/reply-to [client-slug] [url]` | Draft a comment for a specific post you already found |
+| `/clients [list\|view\|default\|delete]` | List, view, switch default, or delete client profiles |
+| `/history [view\|stats\|clear\|export]` | View, filter, or export engagement history |
 
 ---
 
@@ -96,9 +101,11 @@ Use a client slug to target a specific client:
 ```
 /engage client-a "SaaS tools"
 /monitor client-b
+/clients view client-a
+/history client-b stats
 ```
 
-If no slug is provided, the default client is used.
+If no slug is provided, the default client is used. Switch the default with `/clients default <slug>`.
 
 ---
 
@@ -111,7 +118,7 @@ Run `/setup` once per client. All commands automatically load the right brand co
 Searches using web search only — never opens Reddit, LinkedIn, Twitter, or Quora in the browser. Your logged-in sessions are untouched. Runs multiple query variations per keyword for better coverage.
 
 ### 3. Batched results with direct URLs
-Results come in batches of 10, sorted newest first. Each result shows the full post URL so you can click and review it yourself. Type "load more" for the next batch.
+Results come in configurable batches (default: 10), sorted newest first. Each result shows the full post URL so you can click and review it yourself. Type "load more" for the next batch.
 
 ### 4. You pick which posts to engage with
 Select posts by number (e.g., "draft for 1, 3, 7"). Only then does the tool read those specific posts.
@@ -127,16 +134,37 @@ Every posted engagement is automatically saved to structured JSON. No more dupli
 
 ---
 
+## Configuration
+
+Global preferences in `.sl/config.json`:
+
+```json
+{
+  "default_client": "acme-corp",
+  "preferences": {
+    "default_platforms": ["reddit", "linkedin", "twitter", "quora"],
+    "date_range_days": 30,
+    "result_cap": 100,
+    "batch_size": 10
+  }
+}
+```
+
+These defaults apply across all clients and can be edited directly.
+
+---
+
 ## Safety Features
 
 - **Web search only during discovery** — never navigates to social platforms until you select specific posts
 - **Never enters credentials** — if login is needed, it asks you to log in yourself
-- **30-day date filter** — every search is filtered to recent posts only
-- **100-result cap** — prevents runaway searches; notifies you with exact date range if capped
+- **Configurable date filter** — every search is filtered to recent posts only (default: 30 days)
+- **Result cap** — prevents runaway searches; notifies you with exact date range if capped (default: 100)
 - **Rate limiting** — enforces gaps between posts to avoid spam detection
 - **Platform compliance** — checks subreddit rules, respects character limits, follows FTC disclosure guidance
 - **Structured engagement history** — JSON-based tracking prevents duplicate engagements across sessions, per client
-- **De-duplication** — already-engaged posts are automatically excluded from search results
+- **Two-level de-duplication** — already-engaged posts excluded from results, plus URL normalization removes duplicates within searches
+- **Platform normalization** — handles twitter/x aliases automatically
 
 ---
 

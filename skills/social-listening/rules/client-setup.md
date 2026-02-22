@@ -63,7 +63,7 @@ All client data lives in `.sl/` in the project root:
   "tone": "friendly, thoughtful, constructive",
   "disclosure": false,
   "competitors": ["Competitor A", "Competitor B"],
-  "subreddits": ["r/relevant1", "r/relevant2"],
+  "subreddits": ["smallbusiness", "freelance"],
   "created_at": "2026-02-22",
   "notes": ""
 }
@@ -83,7 +83,7 @@ All client data lives in `.sl/` in the project root:
 - `tone` — defaults to "friendly, thoughtful, constructive"
 - `disclosure` — defaults to false
 - `competitors` — used for filtering, not searching
-- `subreddits` — targeted subreddit searches on Reddit
+- `subreddits` — subreddit names WITHOUT the `r/` prefix (e.g., `["smallbusiness", "freelance"]`)
 - `notes` — free-form notes about the client
 
 ---
